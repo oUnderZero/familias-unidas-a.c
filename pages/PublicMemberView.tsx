@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, Link, useLocation } from 'react-router-dom';
+import { useParams, useLocation } from 'react-router-dom';
 import { Member, Credential } from '../types';
-import { getMemberById } from '../services/memberService';
+import { fetchPublicMember, resolveMediaUrl } from '../services/memberService';
 import { CheckCircle2, XCircle, AlertTriangle, Droplet, Phone, Calendar, MapPin, ShieldAlert, Timer, History, Users } from 'lucide-react';
 
 export const PublicMemberView: React.FC = () => {
@@ -12,39 +12,24 @@ export const PublicMemberView: React.FC = () => {
   const [errorType, setErrorType] = useState<'NOT_FOUND' | 'INVALID_QR' | null>(null);
 
   useEffect(() => {
-    if (id) {
-      const found = getMemberById(id);
-      
-      if (!found) {
+    if (!id) return;
+    const searchParams = new URLSearchParams(location.search);
+    const urlToken = searchParams.get('token') || undefined;
+
+    const load = async () => {
+      try {
+        const res = await fetchPublicMember(id, urlToken);
+        setMember(res.member);
+        setScannedCredential(res.credential);
+        setErrorType(res.errorType);
+      } catch (err) {
+        console.error('Error fetching public member', err);
         setMember(null);
         setErrorType('NOT_FOUND');
-        return;
       }
+    };
 
-      // VALIDATE TOKEN AGAINST HISTORY
-      // Parse ?token=XYZ from URL
-      const searchParams = new URLSearchParams(location.search);
-      const urlToken = searchParams.get('token');
-      
-      if (!urlToken) {
-          setMember(found);
-          setErrorType('INVALID_QR');
-          return;
-      }
-
-      // Find the specific credential in history
-      const matchingCredential = found.credentials.find(c => c.token === urlToken);
-
-      if (matchingCredential) {
-         setMember(found);
-         setScannedCredential(matchingCredential);
-         setErrorType(null);
-      } else {
-         // Token doesn't exist in history at all (Fake QR)
-         setMember(found);
-         setErrorType('INVALID_QR');
-      }
-    }
+    void load();
   }, [id, location.search]);
 
   if (member === undefined) {
@@ -126,8 +111,8 @@ export const PublicMemberView: React.FC = () => {
            <div className="absolute top-10 left-10 w-20 h-20 bg-white/10 rounded-full blur-lg"></div>
 
            <div className="absolute top-4 left-4 flex items-center gap-2 text-white">
-              <div className="bg-white/20 p-1.5 rounded-full">
-                <Users size={16} />
+              <div className="bg-white/20 p-1.5 rounded-full overflow-hidden">
+                <img src="/logo.png" alt="Logo" className="w-8 h-8 rounded-full object-cover" />
               </div>
               <div className="flex flex-col leading-none">
                 <span className="text-[10px] font-bold tracking-widest opacity-90">FAMILIAS UNIDAS</span>
@@ -144,7 +129,7 @@ export const PublicMemberView: React.FC = () => {
         <div className="relative -mt-16 flex justify-center">
             <div className="p-1.5 bg-white rounded-full shadow-lg">
                 <img 
-                    src={member?.photoUrl} 
+                    src={resolveMediaUrl(member?.photoUrl)} 
                     alt={`${member?.firstName}`} 
                     className="w-32 h-32 rounded-full object-cover border-4 border-slate-50 bg-slate-200"
                 />

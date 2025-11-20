@@ -5,7 +5,6 @@ import { AdminDashboard } from './pages/AdminDashboard';
 import { MemberForm } from './pages/MemberForm';
 import { PublicMemberView } from './pages/PublicMemberView';
 import { Login } from './pages/Login';
-import { seedData } from './services/memberService';
 
 function App() {
   // Simple auth state simulation
@@ -13,7 +12,6 @@ function App() {
   
   // On mount, check local storage for auth session and seed mock data
   useEffect(() => {
-    seedData();
     const session = localStorage.getItem('ong_admin_session');
     if (session === 'true') {
       setIsAuthenticated(true);

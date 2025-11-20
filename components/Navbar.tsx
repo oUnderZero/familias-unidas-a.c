@@ -18,7 +18,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onLogout }) => {
         <div className="flex justify-between h-20 items-center">
           <Link to="/admin" className="flex items-center gap-3 font-bold text-xl group">
             <div className="bg-orange-100 p-2 rounded-full group-hover:bg-orange-200 transition-colors">
-                <Users className="text-orange-600" size={24} />
+                <img src="/logo.png" alt="Logo" className="h-10 w-10 rounded-full object-cover shadow-inner" />
             </div>
             <div className="flex flex-col leading-tight">
                 <span className="text-orange-600 font-extrabold tracking-tight">FAMILIAS UNIDAS</span>

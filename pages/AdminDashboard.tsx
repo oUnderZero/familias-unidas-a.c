@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { getMembers, deleteMember, getActiveCredential } from '../services/memberService';
+import { getMembers, deleteMember, getActiveCredential, resolveMediaUrl } from '../services/memberService';
 import { Member, Credential } from '../types';
 import { Plus, Trash2, Edit, QrCode, Search, Eye, ExternalLink, Filter, MapPin, CalendarClock, AlertOctagon, Printer, Image as ImageIcon } from 'lucide-react';
 import { QrGenerator } from '../components/QrGenerator';
@@ -21,13 +21,29 @@ export const AdminDashboard: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'ACTIVE' | 'INACTIVE'>('ALL');
 
   useEffect(() => {
-    setMembers(getMembers());
+    const fetchMembers = async () => {
+      try {
+        const data = await getMembers();
+        setMembers(data);
+      } catch (err) {
+        console.error('Error loading members', err);
+        alert('No se pudo cargar la lista de miembros. Verifica la API.');
+      }
+    };
+    void fetchMembers();
   }, []);
 
-  const handleDelete = (id: string) => {
-    if (window.confirm('¿Estás seguro de eliminar este miembro? Esta acción no se puede deshacer.')) {
-      deleteMember(id);
-      setMembers(getMembers());
+  const handleDelete = async (id: string) => {
+    if (!window.confirm('¿Estás seguro de eliminar este miembro? Esta acción no se puede deshacer.')) {
+      return;
+    }
+    try {
+      await deleteMember(id);
+      const refreshed = await getMembers();
+      setMembers(refreshed);
+    } catch (err) {
+      console.error('Error deleting member', err);
+      alert('No se pudo eliminar. Revisa la API.');
     }
   };
 
@@ -77,10 +93,13 @@ export const AdminDashboard: React.FC = () => {
     <div className="max-w-7xl mx-auto px-4 py-8">
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
-        <div>
-           <h1 className="text-3xl font-bold text-slate-800">Directorio de Miembros</h1>
-           <div className="h-1 w-20 bg-orange-500 rounded mt-2"></div>
-           <p className="text-slate-500 mt-1">Gestión centralizada de credenciales y accesos.</p>
+        <div className="flex items-center gap-3">
+           <img src="/logo.png" alt="Logo" className="w-12 h-12 rounded-full border-2 border-orange-200 shadow-sm" />
+           <div>
+             <h1 className="text-3xl font-bold text-slate-800">Directorio de Miembros</h1>
+             <div className="h-1 w-20 bg-orange-500 rounded mt-2"></div>
+             <p className="text-slate-500 mt-1">Gestión centralizada de credenciales y accesos.</p>
+           </div>
         </div>
         <Link 
           to="/admin/create"
@@ -142,7 +161,7 @@ export const AdminDashboard: React.FC = () => {
                   <td className="p-4">
                     <div className="flex items-center gap-3">
                         <img 
-                            src={member.photoUrl} 
+                            src={resolveMediaUrl(member.photoUrl)} 
                             alt="" 
                             className="w-10 h-10 rounded-full object-cover bg-slate-200 border-2 border-white shadow-sm"
                         />
@@ -228,7 +247,7 @@ export const AdminDashboard: React.FC = () => {
                     </div>
                   </td>
                 </tr>
-              )}})
+              )})}
               
               {filteredMembers.length === 0 && (
                 <tr>

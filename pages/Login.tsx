@@ -24,8 +24,8 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
       
       <div className="max-w-md w-full bg-white rounded-2xl shadow-2xl overflow-hidden z-10 border border-orange-100 relative">
         <div className="bg-white p-8 pb-0 text-center">
-          <div className="w-20 h-20 bg-gradient-to-br from-orange-400 to-yellow-400 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg border-4 border-white">
-            <Users className="text-white" size={40} />
+          <div className="w-40 h-40 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg border-4 border-white overflow-hidden">
+            <img src="/logo.png" alt="Logo" className="w-full h-full object-cover" />
           </div>
           <h2 className="text-2xl font-extrabold text-slate-800">Bienvenido</h2>
           <p className="text-orange-600 font-semibold text-sm uppercase tracking-wider mt-1">Familias Unidas A.C.</p>

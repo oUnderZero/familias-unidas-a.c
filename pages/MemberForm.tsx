@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { getMemberById, saveMember } from '../services/memberService';
+import { getMemberById, saveMember, resolveMediaUrl } from '../services/memberService';
 import { Member, Credential } from '../types';
 import { Save, ArrowLeft, User, Briefcase, Image as ImageIcon, MapPin, Upload, BadgeCheck, Plus, History, AlertOctagon, CheckCircle2 } from 'lucide-react';
 
@@ -13,6 +13,7 @@ export const MemberForm: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
   
   // Form State
   const [formData, setFormData] = useState<Partial<Member>>({
@@ -28,24 +29,31 @@ export const MemberForm: React.FC = () => {
   );
 
   useEffect(() => {
-    if (id) {
-      const existing = getMemberById(id);
-      if (existing) {
-        // Ensure credentials array exists even if data is old
-        setFormData({
-            ...existing,
-            credentials: existing.credentials || []
-        });
+    const loadMember = async () => {
+      if (id) {
+        try {
+          const existing = await getMemberById(id);
+          if (existing) {
+            setFormData({
+                ...existing,
+                credentials: existing.credentials || []
+            });
+          } else {
+            navigate('/admin');
+          }
+        } catch (err) {
+          console.error('Error loading member', err);
+          alert('No se pudo cargar el miembro. Verifica la API.');
+          navigate('/admin');
+        }
       } else {
-        navigate('/admin');
+          setFormData(prev => ({
+              ...prev,
+              photoUrl: ''
+          }));
       }
-    } else {
-        setFormData(prev => ({
-            ...prev,
-            id: generateId(),
-            photoUrl: ''
-        }));
-    }
+    };
+    void loadMember();
   }, [id, navigate]);
 
   // Helper to show temporary success message
@@ -54,7 +62,7 @@ export const MemberForm: React.FC = () => {
     setTimeout(() => setSuccessMsg(null), 3000);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (formData.firstName && formData.lastName) {
       const finalData = {
@@ -73,8 +81,16 @@ export const MemberForm: React.FC = () => {
           }];
       }
 
-      saveMember(finalData as Member);
-      navigate('/admin');
+      try {
+        setIsSaving(true);
+        await saveMember(finalData as Member, Boolean(id));
+        navigate('/admin');
+      } catch (err) {
+        console.error('Error saving member', err);
+        alert('No se pudo guardar. Verifica la API.');
+      } finally {
+        setIsSaving(false);
+      }
     }
   };
 
@@ -176,7 +192,7 @@ export const MemberForm: React.FC = () => {
                         className="w-40 h-40 rounded-full overflow-hidden bg-slate-100 mb-4 border-4 border-slate-50 shadow-inner relative group cursor-pointer hover:border-orange-200 transition-all"
                     >
                         {formData.photoUrl ? (
-                            <img src={formData.photoUrl} alt="Preview" className="w-full h-full object-cover" />
+                            <img src={resolveMediaUrl(formData.photoUrl)} alt="Preview" className="w-full h-full object-cover" />
                         ) : (
                             <div className="w-full h-full flex flex-col items-center justify-center text-slate-300">
                                 <User size={48} />
@@ -458,9 +474,10 @@ export const MemberForm: React.FC = () => {
                 </button>
                 <button 
                     type="submit"
-                    className="px-8 py-3 rounded-lg bg-orange-600 text-white font-bold hover:bg-orange-700 transition-all shadow-lg hover:shadow-xl flex items-center gap-2"
+                    disabled={isSaving}
+                    className="px-8 py-3 rounded-lg bg-orange-600 text-white font-bold hover:bg-orange-700 transition-all shadow-lg hover:shadow-xl flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
                 >
-                    <Save size={20} /> Guardar Todo
+                    <Save size={20} /> {isSaving ? 'Guardando...' : 'Guardar Todo'}
                 </button>
             </div>
 

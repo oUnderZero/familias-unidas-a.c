@@ -1,6 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { QRCodeCanvas } from 'qrcode.react';
 import { Member, Credential } from '../types';
+import { resolveMediaUrl } from '../services/memberService';
 import { Download, Upload, Image as ImageIcon, AlertTriangle } from 'lucide-react';
 
 interface CredentialCanvasProps {
@@ -59,7 +60,7 @@ export const CredentialCanvas: React.FC<CredentialCanvasProps> = ({ member, cred
         // 2. Member Photo (Left Side)
         if (member.photoUrl) {
           try {
-            const photo = await loadImage(member.photoUrl);
+            const photo = await loadImage(resolveMediaUrl(member.photoUrl));
             
             // Coordenadas ajustadas para el recuadro izquierdo de la plantilla mostrada
             const photoX = 45; 
