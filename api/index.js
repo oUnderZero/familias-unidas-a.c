@@ -15,6 +15,8 @@ const __dirname = path.dirname(__filename);
 const PORT = process.env.PORT || 4000;
 const DB_PATH = process.env.DB_PATH || path.join(__dirname, 'data.sqlite');
 const UPLOAD_DIR = path.join(__dirname, 'uploads');
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
+const TOKEN_SECRET = process.env.ADMIN_SECRET || 'dev_secret';
 
 const app = express();
 app.use(cors());
@@ -36,6 +38,27 @@ db.pragma('journal_mode = WAL');
 
 const generateId = () => crypto.randomUUID();
 const generateToken = () => crypto.randomBytes(16).toString('hex');
+
+const signAuthToken = (payload) => {
+  const header = Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString('base64url');
+  const body = Buffer.from(JSON.stringify(payload)).toString('base64url');
+  const signature = crypto.createHmac('sha256', TOKEN_SECRET).update(`${header}.${body}`).digest('base64url');
+  return `${header}.${body}.${signature}`;
+};
+
+const verifyAuthToken = (token) => {
+  try {
+    const [headerB64, bodyB64, sig] = token.split('.');
+    if (!headerB64 || !bodyB64 || !sig) return null;
+    const expected = crypto.createHmac('sha256', TOKEN_SECRET).update(`${headerB64}.${bodyB64}`).digest('base64url');
+    if (!crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(expected))) return null;
+    const payload = JSON.parse(Buffer.from(bodyB64, 'base64url').toString());
+    if (payload.exp && Date.now() > payload.exp) return null;
+    return payload;
+  } catch {
+    return null;
+  }
+};
 
 const ensureUploadDir = () => {
   if (!fs.existsSync(UPLOAD_DIR)) {
@@ -61,6 +84,19 @@ const ensureCurpColumn = () => {
       console.error('No se pudo agregar columna postalCode:', err);
     }
   }
+};
+
+const authGuard = (req, res, next) => {
+  if (req.path.startsWith('/public') || req.path === '/health' || req.path === '/login') {
+    return next();
+  }
+  const auth = req.headers.authorization || '';
+  const token = auth.replace('Bearer ', '');
+  const payload = verifyAuthToken(token);
+  if (!payload) {
+    return res.status(401).send('Unauthorized');
+  }
+  next();
 };
 
 const saveBase64Image = (dataUrl, memberId) => {
@@ -226,9 +262,22 @@ initDb();
 ensureCurpColumn();
 ensureUploadDir();
 seedIfEmpty();
+app.use('/api', authGuard);
 
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok' });
+});
+
+app.post('/api/login', (req, res) => {
+  const { password } = req.body || {};
+  if (!password || password !== ADMIN_PASSWORD) {
+    return res.status(401).send('Credenciales incorrectas');
+  }
+  const token = signAuthToken({
+    sub: 'admin',
+    exp: Date.now() + 7 * 24 * 60 * 60 * 1000
+  });
+  res.json({ token });
 });
 
 app.get('/api/members', (_req, res) => {

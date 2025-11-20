@@ -9,10 +9,12 @@ const resolveApiBase = () => {
 
 const API_BASE = resolveApiBase();
 const API_ORIGIN = API_BASE.replace(/\/api\/?$/, '');
+const TOKEN_KEY = 'ong_admin_token';
 
 const request = async <T>(path: string, options?: RequestInit): Promise<T> => {
+  const token = typeof localStorage !== 'undefined' ? localStorage.getItem(TOKEN_KEY) : null;
   const res = await fetch(`${API_BASE}${path}`, {
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
     ...options,
   });
   if (!res.ok) {
@@ -65,6 +67,24 @@ export const fetchPublicMember = async (
 ): Promise<{ member: Member | null; credential: Credential | null; errorType: 'NOT_FOUND' | 'INVALID_QR' | null }> => {
   const qs = token ? `?token=${encodeURIComponent(token)}` : '';
   return request(`/public/members/${id}${qs}`);
+};
+
+export const login = async (password: string): Promise<string> => {
+  const resp = await request<{ token: string }>('/login', {
+    method: 'POST',
+    body: JSON.stringify({ password })
+  });
+  const token = (resp as any)?.token;
+  if (token && typeof localStorage !== 'undefined') {
+    localStorage.setItem(TOKEN_KEY, token);
+  }
+  return token;
+};
+
+export const clearToken = () => {
+  if (typeof localStorage !== 'undefined') {
+    localStorage.removeItem(TOKEN_KEY);
+  }
 };
 
 // Kept for backward compatibility with App.tsx; backend seeds on startup.

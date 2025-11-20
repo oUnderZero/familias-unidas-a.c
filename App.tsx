@@ -5,6 +5,7 @@ import { AdminDashboard } from './pages/AdminDashboard';
 import { MemberForm } from './pages/MemberForm';
 import { PublicMemberView } from './pages/PublicMemberView';
 import { Login } from './pages/Login';
+import { clearToken } from './services/memberService';
 
 function App() {
   // Simple auth state simulation
@@ -18,19 +19,17 @@ function App() {
     }
   }, []);
 
-  const handleLogin = (password: string) => {
-    // Simple hardcoded password for demo purposes
-    if (password === 'admin123') {
-      setIsAuthenticated(true);
-      localStorage.setItem('ong_admin_session', 'true');
-      return true;
-    }
-    return false;
+  const handleLogin = (token: string) => {
+    setIsAuthenticated(true);
+    localStorage.setItem('ong_admin_session', 'true');
+    localStorage.setItem('ong_admin_token', token);
   };
 
   const handleLogout = () => {
     setIsAuthenticated(false);
     localStorage.removeItem('ong_admin_session');
+    localStorage.removeItem('ong_admin_token');
+    clearToken();
   };
 
   return (

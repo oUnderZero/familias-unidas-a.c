@@ -1,19 +1,27 @@
 import React, { useState } from 'react';
 import { Lock, Users } from 'lucide-react';
+import { login } from '../services/memberService';
 
 interface LoginProps {
-  onLogin: (pass: string) => boolean;
+  onLogin: (token: string) => void;
 }
 
 export const Login: React.FC<LoginProps> = ({ onLogin }) => {
   const [password, setPassword] = useState('');
-  const [error, setError] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const success = onLogin(password);
-    if (!success) {
-      setError(true);
+    setLoading(true);
+    setError(null);
+    try {
+      const token = await login(password);
+      onLogin(token);
+    } catch (err: any) {
+      setError(err?.message || 'Credenciales incorrectas');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -47,22 +55,23 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
                 value={password}
                 onChange={(e) => {
                     setPassword(e.target.value);
-                    setError(false);
+                    setError(null);
                 }}
                 />
             </div>
             {error && (
               <p className="text-red-500 text-xs mt-2 font-medium flex items-center gap-1">
-                 Contraseña incorrecta..
+                 {error}
               </p>
             )}
           </div>
           
           <button
             type="submit"
-            className="w-full bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-white font-bold py-3.5 px-4 rounded-xl transition-all shadow-lg hover:shadow-orange-200 transform active:scale-95 flex justify-center items-center gap-2"
+            disabled={loading}
+            className="w-full bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-white font-bold py-3.5 px-4 rounded-xl transition-all shadow-lg hover:shadow-orange-200 transform active:scale-95 flex justify-center items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            Ingresar al Sistema
+            {loading ? 'Ingresando...' : 'Ingresar al Sistema'}
           </button>
         </form>
         
