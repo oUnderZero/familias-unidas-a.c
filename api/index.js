@@ -21,6 +21,15 @@ app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 app.use('/uploads', express.static(UPLOAD_DIR));
 
+const ensureDbDir = () => {
+  const dir = path.dirname(DB_PATH);
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
+};
+
+ensureDbDir();
+
 const db = new Database(DB_PATH);
 db.pragma('foreign_keys = ON');
 db.pragma('journal_mode = WAL');
