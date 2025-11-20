@@ -5,6 +5,7 @@ import { AdminDashboard } from './pages/AdminDashboard';
 import { MemberForm } from './pages/MemberForm';
 import { PublicMemberView } from './pages/PublicMemberView';
 import { Login } from './pages/Login';
+import { NotFound } from './pages/NotFound';
 import { clearToken } from './services/memberService';
 
 function App() {
@@ -86,6 +87,9 @@ function App() {
               )
             } 
           />
+
+          {/* Catch-all */}
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </div>
     </HashRouter>
