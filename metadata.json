@@ -1,0 +1,5 @@
+{
+  "name": "Credenciales Digitales ONG",
+  "description": "Sistema de gestión de credenciales para asociación sin fines de lucro. Generación de QRs y perfiles públicos de miembros.",
+  "requestFramePermissions": []
+}
