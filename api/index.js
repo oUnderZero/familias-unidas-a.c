@@ -34,6 +34,26 @@ const ensureUploadDir = () => {
   }
 };
 
+const ensureCurpColumn = () => {
+  const columns = db.prepare("PRAGMA table_info(members)").all();
+  const hasCurp = columns.some((c) => c.name === 'curp');
+  const hasPostalCode = columns.some((c) => c.name === 'postalCode');
+  if (!hasCurp) {
+    try {
+      db.prepare("ALTER TABLE members ADD COLUMN curp TEXT").run();
+    } catch (err) {
+      console.error('No se pudo agregar columna curp:', err);
+    }
+  }
+  if (!hasPostalCode) {
+    try {
+      db.prepare("ALTER TABLE members ADD COLUMN postalCode TEXT").run();
+    } catch (err) {
+      console.error('No se pudo agregar columna postalCode:', err);
+    }
+  }
+};
+
 const saveBase64Image = (dataUrl, memberId) => {
   try {
     const matches = dataUrl.match(/^data:(image\/\w+);base64,(.+)$/);
@@ -59,9 +79,11 @@ const initDb = () => {
       role TEXT NOT NULL,
       joinDate TEXT NOT NULL,
       bloodType TEXT,
+      curp TEXT,
       emergencyContact TEXT,
       photoUrl TEXT,
       status TEXT NOT NULL,
+      postalCode TEXT,
       street TEXT,
       houseNumber TEXT,
       colony TEXT,
@@ -88,8 +110,8 @@ const seedIfEmpty = () => {
 
   const tx = db.transaction(() => {
     const memberStmt = db.prepare(`
-      INSERT INTO members (id, firstName, lastName, role, joinDate, bloodType, emergencyContact, photoUrl, status, street, houseNumber, colony, city)
-      VALUES (@id, @firstName, @lastName, @role, @joinDate, @bloodType, @emergencyContact, @photoUrl, @status, @street, @houseNumber, @colony, @city)
+      INSERT INTO members (id, firstName, lastName, role, joinDate, bloodType, curp, emergencyContact, photoUrl, status, street, houseNumber, colony, city)
+      VALUES (@id, @firstName, @lastName, @role, @joinDate, @bloodType, @curp, @emergencyContact, @photoUrl, @status, @street, @houseNumber, @colony, @city)
     `);
     const credentialStmt = db.prepare(`
       INSERT INTO credentials (id, memberId, token, issueDate, expirationDate, status)
@@ -103,10 +125,12 @@ const seedIfEmpty = () => {
         lastName: 'Gomez',
         role: 'Presidente',
         joinDate: '2020-01-15',
-        bloodType: 'O+',
-        photoUrl: 'https://picsum.photos/200/200?random=1',
-        status: 'ACTIVE',
-        emergencyContact: '555-123-4567',
+      bloodType: 'O+',
+      curp: 'GOZR800101HDFRBN01',
+      postalCode: '58000',
+      photoUrl: 'https://picsum.photos/200/200?random=1',
+      status: 'ACTIVE',
+      emergencyContact: '555-123-4567',
         street: 'Av. Principal',
         houseNumber: '123',
         colony: 'Centro',
@@ -134,9 +158,11 @@ const seedIfEmpty = () => {
         lastName: 'Fernandez',
         role: 'Tesorera',
         joinDate: '2021-03-10',
-        bloodType: 'A+',
-        photoUrl: 'https://picsum.photos/200/200?random=2',
-        status: 'ACTIVE',
+      bloodType: 'A+',
+      curp: 'FEGM900202MDFLRS02',
+      postalCode: '58099',
+      photoUrl: 'https://picsum.photos/200/200?random=2',
+      status: 'ACTIVE',
         emergencyContact: '555-987-6543',
         street: 'Calle de las Flores',
         houseNumber: '45 Int 2',
@@ -188,6 +214,7 @@ const findMemberWithCreds = (id) => {
 };
 
 initDb();
+ensureCurpColumn();
 ensureUploadDir();
 seedIfEmpty();
 
@@ -233,8 +260,8 @@ app.post('/api/members', (req, res) => {
 
   const tx = db.transaction(() => {
     db.prepare(`
-      INSERT INTO members (id, firstName, lastName, role, joinDate, bloodType, emergencyContact, photoUrl, status, street, houseNumber, colony, city)
-      VALUES (@id, @firstName, @lastName, @role, @joinDate, @bloodType, @emergencyContact, @photoUrl, @status, @street, @houseNumber, @colony, @city)
+      INSERT INTO members (id, firstName, lastName, role, joinDate, bloodType, curp, emergencyContact, photoUrl, status, postalCode, street, houseNumber, colony, city)
+      VALUES (@id, @firstName, @lastName, @role, @joinDate, @bloodType, @curp, @emergencyContact, @photoUrl, @status, @postalCode, @street, @houseNumber, @colony, @city)
     `).run({
       id: memberId,
       firstName: body.firstName,
@@ -242,9 +269,11 @@ app.post('/api/members', (req, res) => {
       role: body.role,
       joinDate: body.joinDate || new Date().toISOString().split('T')[0],
       bloodType: body.bloodType || null,
+      curp: body.curp || null,
       emergencyContact: body.emergencyContact || null,
       photoUrl,
       status: body.status || 'ACTIVE',
+      postalCode: body.postalCode || null,
       street: body.street || null,
       houseNumber: body.houseNumber || null,
       colony: body.colony || null,
@@ -292,7 +321,7 @@ app.put('/api/members/:id', (req, res) => {
 
   const tx = db.transaction(() => {
     db.prepare(`
-      UPDATE members SET firstName=@firstName,lastName=@lastName,role=@role,joinDate=@joinDate,bloodType=@bloodType,
+      UPDATE members SET firstName=@firstName,lastName=@lastName,role=@role,joinDate=@joinDate,bloodType=@bloodType,curp=@curp,postalCode=@postalCode,
       emergencyContact=@emergencyContact,photoUrl=@photoUrl,status=@status,street=@street,houseNumber=@houseNumber,
       colony=@colony,city=@city WHERE id=@id
     `).run({
@@ -302,6 +331,8 @@ app.put('/api/members/:id', (req, res) => {
       role: body.role,
       joinDate: body.joinDate || current.joinDate,
       bloodType: body.bloodType || null,
+      curp: body.curp || null,
+      postalCode: body.postalCode || null,
       emergencyContact: body.emergencyContact || null,
       photoUrl,
       status: body.status || 'ACTIVE',

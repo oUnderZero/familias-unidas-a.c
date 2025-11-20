@@ -13,9 +13,11 @@ export interface Member {
   role: string;
   joinDate: string;
   bloodType?: string;
+  curp?: string;
   emergencyContact?: string;
   photoUrl: string;
   status: 'ACTIVE' | 'INACTIVE'; // Estado general del miembro en la ONG
+  postalCode?: string;
   
   // Address fields
   street?: string;

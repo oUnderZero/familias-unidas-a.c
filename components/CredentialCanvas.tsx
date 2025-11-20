@@ -2,7 +2,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import { QRCodeCanvas } from 'qrcode.react';
 import { Member, Credential } from '../types';
 import { resolveMediaUrl } from '../services/memberService';
-import { Download, Upload, Image as ImageIcon, AlertTriangle } from 'lucide-react';
+import { Download, Image as ImageIcon } from 'lucide-react';
 
 interface CredentialCanvasProps {
   member: Member;
@@ -17,13 +17,18 @@ export const CredentialCanvas: React.FC<CredentialCanvasProps> = ({ member, cred
   // Hidden QR ref to extract image data
   const qrRef = useRef<HTMLDivElement>(null);
 
-  const [frontTemplate, setFrontTemplate] = useState<string | null>(null);
-  const [backTemplate, setBackTemplate] = useState<string | null>(null);
+  const [frontTemplate] = useState<string | null>(null);
+  const [backTemplate] = useState<string | null>(null);
   const [imgError, setImgError] = useState<string | null>(null);
 
-  // Default dimensions for standard ID card (High Res)
+  // Diseño base (sobre las plantillas originales)
   const WIDTH = 1012;
   const HEIGHT = 638;
+  // Tamaño de exportación físico: 8.5 cm x 5.3 cm a 300 DPI
+  const PRINT_WIDTH = Math.round((8.5 / 2.54) * 300);   // cm -> pulgadas -> px
+  const PRINT_HEIGHT = Math.round((5.3 / 2.54) * 300);
+  const DEFAULT_FRONT = '/templates/front.png';
+  const DEFAULT_BACK = '/templates/back.png';
 
   // DRAW FRONT
   useEffect(() => {
@@ -39,34 +44,20 @@ export const CredentialCanvas: React.FC<CredentialCanvasProps> = ({ member, cred
 
     const drawFront = async () => {
       try {
-        // 1. Background Template
-        if (frontTemplate) {
-          const img = await loadImage(frontTemplate);
-          ctx.drawImage(img, 0, 0, WIDTH, HEIGHT);
-        } else {
-          // Placeholder Guide
-          ctx.fillStyle = '#f8fafc';
-          ctx.fillRect(0, 0, WIDTH, HEIGHT);
-          ctx.strokeStyle = '#94a3b8';
-          ctx.lineWidth = 2;
-          ctx.strokeRect(20, 20, WIDTH - 40, HEIGHT - 40);
-          
-          ctx.fillStyle = '#64748b';
-          ctx.font = '30px sans-serif';
-          ctx.textAlign = 'center';
-          ctx.fillText("Vista Previa (Sube tu plantilla FRENTE)", WIDTH / 2, HEIGHT / 2);
-        }
+        // 1. Background Template (usa la plantilla por defecto si no se sube nada)
+        const frontBg = frontTemplate || DEFAULT_FRONT;
+        const img = await loadImage(frontBg);
+        ctx.drawImage(img, 0, 0, WIDTH, HEIGHT);
 
         // 2. Member Photo (Left Side)
         if (member.photoUrl) {
           try {
             const photo = await loadImage(resolveMediaUrl(member.photoUrl));
-            
-            // Coordenadas ajustadas para el recuadro izquierdo de la plantilla mostrada
-            const photoX = 45; 
-            const photoY = 235;
-            const photoW = 215;
-            const photoH = 260;
+            // Coordenadas cuadrícula del recuadro de foto en la plantilla frontal
+            const photoX = 36; 
+            const photoY = 276;
+            const photoW = 156;
+            const photoH = 156;
             
             // Optional: Draw a white background behind photo in case of transparency
             ctx.fillStyle = '#fff';
@@ -75,65 +66,49 @@ export const CredentialCanvas: React.FC<CredentialCanvasProps> = ({ member, cred
             // Draw Photo
             ctx.drawImage(photo, photoX, photoY, photoW, photoH);
             
-            // Draw a border around photo
-            ctx.strokeStyle = '#000';
-            ctx.lineWidth = 2;
-            ctx.strokeRect(photoX, photoY, photoW, photoH);
+            
 
           } catch (e) {
             console.warn("Could not load member photo, skipping.", e);
             // Draw placeholder if photo fails
             ctx.fillStyle = '#ccc';
-            ctx.fillRect(45, 235, 215, 260);
+            ctx.fillRect(photoX, photoY, photoW, photoH);
             ctx.fillStyle = '#666';
             ctx.font = '14px sans-serif';
-            ctx.fillText("Error Foto", 150, 360);
+            ctx.fillText("Error Foto", photoX + 70, photoY + 120);
           }
         }
 
         // 3. Text Data (Right Side)
         ctx.textAlign = 'left';
         
-        // ROLE (VOCAL/TESORERA) - Above Name
+        // ROLE (arriba de la foto)
         ctx.fillStyle = '#000000'; 
         ctx.font = 'bold 30px Arial, sans-serif';
-        // Centered over the name area somewhat? Or fixed position
-        // Based on image: "VOCAL" is to the left or top? In the image provided, "TESORERA" was above name.
-        ctx.fillText(member.role.toUpperCase(), 290, 220);
+        ctx.textAlign = 'center';
+        ctx.fillText((member.role || '').toUpperCase(), 140, 220);
+        ctx.textAlign = 'left';
 
-        // NAME - Below "NOMBRE" label
-        // Label "NOMBRE" is approx at Y=230 in the image
-        // Text should be at Y=270 approx
         ctx.fillStyle = '#000000';
-        ctx.font = 'bold 38px Arial, sans-serif';
-        // Split full name if too long?
-        const fullName = `${member.firstName} ${member.lastName}`.toUpperCase();
-        ctx.fillText(fullName, 290, 275);
+        ctx.font = '  22px Arial, sans-serif';
+        ctx.fillText((member.firstName || '').toUpperCase(), 240, 300);
+        ctx.fillText((member.lastName || '').toUpperCase(), 620, 300);
 
-        // ADDRESS - Below "DIRECCIÓN" label
-        // Label "DIRECCIÓN" is approx at Y=330
-        // Text area starts approx Y=370
         ctx.fillStyle = '#1e293b';
-        ctx.font = '22px Arial, sans-serif';
-        const addressX = 290;
-        const addressStartY = 375;
-        const lineHeight = 30;
+        ctx.font = '26px Arial, sans-serif';
+        const addressX = 240;
+        const addressY = 405;
+        const dir = [member.street, member.houseNumber].filter(Boolean).join(' ');
+        const colony = member.colony ? member.colony : '';
+        if (dir) ctx.fillText(dir.toUpperCase(), addressX, addressY);
+        if (colony) ctx.fillText(colony.toUpperCase(), addressX, addressY + 32);
 
-        if (member.street) {
-            const fullStreet = `C. ${member.street} #${member.houseNumber || ''}`.toUpperCase();
-            ctx.fillText(fullStreet, addressX, addressStartY);
-        }
-        if (member.colony) {
-            ctx.fillText(`COL. ${member.colony}`.toUpperCase(), addressX, addressStartY + lineHeight);
-        }
-        if (member.city) {
-            ctx.fillText(member.city.toUpperCase(), addressX, addressStartY + (lineHeight * 2));
-        }
+        // C.P (usar postalCode; fallback ID)
+        ctx.font = '24px Arial, sans-serif';
+        const cpValue = member.postalCode || member.id;
+        ctx.fillText((cpValue || '').toUpperCase(), addressX+60, 500);
 
-        // ID - Bottom area or C.P area
-        ctx.fillStyle = '#64748b';
-        ctx.font = '16px monospace';
-        ctx.fillText(`ID: ${member.id}`, addressX, 550);
+        // Ya no mostramos ciudad en esta plantilla
 
       } catch (error) {
         console.error("Error drawing front canvas:", error);
@@ -157,31 +132,21 @@ export const CredentialCanvas: React.FC<CredentialCanvasProps> = ({ member, cred
 
     const drawBack = async () => {
       try {
-        // 1. Background Template
-        if (backTemplate) {
-          const img = await loadImage(backTemplate);
-          ctx.drawImage(img, 0, 0, WIDTH, HEIGHT);
-        } else {
-          // Placeholder
-          ctx.fillStyle = '#f8fafc';
-          ctx.fillRect(0, 0, WIDTH, HEIGHT);
-          ctx.fillStyle = '#64748b';
-          ctx.font = '30px sans-serif';
-          ctx.textAlign = 'center';
-          ctx.fillText("Vista Previa (Sube tu plantilla REVERSO)", WIDTH / 2, HEIGHT / 2);
-        }
+        // 1. Background Template (usa la plantilla por defecto si no se sube nada)
+        const backBg = backTemplate || DEFAULT_BACK;
+        const img = await loadImage(backBg);
+        ctx.drawImage(img, 0, 0, WIDTH, HEIGHT);
 
         // 2. QR Code
-        // Placing on the LEFT side based on typical layouts where text fields are on the right
         const qrCanvas = qrRef.current?.querySelector('canvas');
         if (qrCanvas) {
             const qrDataUrl = qrCanvas.toDataURL();
             const qrImg = await loadImage(qrDataUrl);
             
-            // Position: Left Side, vertically centered relative to the content area
-            const qrSize = 240;
-            const qrX = 60; 
-            const qrY = 200;
+            // Coordenadas del QR en la plantilla reversible
+            const qrSize = 272;
+            const qrX = 30; 
+            const qrY = 220;
             
             ctx.drawImage(qrImg, qrX, qrY, qrSize, qrSize);
 
@@ -192,38 +157,25 @@ export const CredentialCanvas: React.FC<CredentialCanvasProps> = ({ member, cred
             ctx.fillText("ESCANEAR PARA VALIDAR", qrX + (qrSize/2), qrY + qrSize + 20);
         }
 
-        // 3. Text Fields (Right Side aligned with white boxes)
-        // "VIGENCIA" label is approx Y=210
-        // "TIPO DE SANGRE" label is approx Y=310
-        // "CURP" label is approx Y=410
-        
+        // 3. Text Fields (alineadas con barras azules)
         ctx.textAlign = 'left';
         ctx.fillStyle = '#000000';
         
-        // We need to print the VALUES inside the white strips to the right of the labels
-        // Assuming labels end around X=450, so we start text at X=480
-        const textX = 480; 
+        
         
         // VIGENCIA
         ctx.font = 'bold 34px Arial, sans-serif';
-        // Center vertically in the white strip (approx Y=200 to 260) -> Text baseline ~245
-        ctx.fillText(credential.expirationDate, textX, 245);
+        ctx.fillText(credential.expirationDate, 537, 260);
 
         // SANGRE
         if (member.bloodType) {
-            // Strip approx Y=300 to 360 -> Text baseline ~345
-            ctx.fillText(member.bloodType, textX, 345);
+            ctx.fillText(member.bloodType, 665, 370);
         }
 
-        // CURP / Emergency
-        if (member.emergencyContact) {
-             // Strip approx Y=400 to 460 -> Text baseline ~445
-            ctx.font = '28px Arial, sans-serif';
-            ctx.fillText(member.emergencyContact, textX, 445);
-        } else {
-            // Fallback text if needed
-            // ctx.fillText("NO REGISTRADO", textX, 445);
-        }
+        // CURP / Emergency (usamos emergencias como CURP si no hay otro campo)
+        const curpValue = member.curp || member.emergencyContact || member.id;
+        ctx.font = '28px Arial, sans-serif';
+        ctx.fillText(curpValue, 468, 475);
 
       } catch (error) {
         console.error("Error drawing back canvas:", error);
@@ -256,61 +208,27 @@ export const CredentialCanvas: React.FC<CredentialCanvasProps> = ({ member, cred
     });
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, setFn: (s: string) => void) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (ev) => setFn(ev.target?.result as string);
-      reader.readAsDataURL(file);
-    }
-  };
-
   const downloadCanvas = (canvasRef: React.RefObject<HTMLCanvasElement>, filename: string) => {
     const canvas = canvasRef.current;
-    if (canvas) {
-      const link = document.createElement('a');
-      link.download = filename;
-      link.href = canvas.toDataURL('image/png');
-      link.click();
-    }
+    if (!canvas) return;
+
+    // Escala el lienzo de vista previa al tamaño físico requerido
+    const exportCanvas = document.createElement('canvas');
+    exportCanvas.width = PRINT_WIDTH;
+    exportCanvas.height = PRINT_HEIGHT;
+    const ctx = exportCanvas.getContext('2d');
+    if (!ctx) return;
+
+    ctx.drawImage(canvas, 0, 0, PRINT_WIDTH, PRINT_HEIGHT);
+
+    const link = document.createElement('a');
+    link.download = filename;
+    link.href = exportCanvas.toDataURL('image/png');
+    link.click();
   };
 
   return (
-    <div className="flex flex-col gap-8 w-full">
-      {/* Controls */}
-      <div className="bg-blue-50 p-4 rounded-lg border border-blue-100 text-sm text-blue-800 mb-2 flex items-start gap-2">
-         <AlertTriangle size={16} className="mt-0.5 shrink-0" />
-         <p>
-            <strong>Nota:</strong> Sube las imágenes de "Frente" y "Reverso" que tienes en tu PC para ver el resultado final superpuesto.
-            Los datos se ajustarán automáticamente a los espacios en blanco.
-         </p>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-50 p-4 rounded-lg border border-slate-200">
-         <div>
-            <label className="block text-sm font-bold text-slate-700 mb-2 flex items-center gap-2">
-                <Upload size={16} /> Plantilla FRENTE
-            </label>
-            <input 
-                type="file" 
-                accept="image/*" 
-                className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100"
-                onChange={(e) => handleImageUpload(e, setFrontTemplate)}
-            />
-         </div>
-         <div>
-            <label className="block text-sm font-bold text-slate-700 mb-2 flex items-center gap-2">
-                <Upload size={16} /> Plantilla REVERSO
-            </label>
-            <input 
-                type="file" 
-                accept="image/*" 
-                className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100"
-                onChange={(e) => handleImageUpload(e, setBackTemplate)}
-            />
-         </div>
-      </div>
-
+    <div className="flex flex-col gap-6 w-full">
       {/* Render Areas */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
         {/* FRONT */}

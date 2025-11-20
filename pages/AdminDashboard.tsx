@@ -286,20 +286,36 @@ export const AdminDashboard: React.FC = () => {
             <h3 className="text-xl font-bold text-slate-800 mb-4 print:hidden">Credencial Digital</h3>
             
             {/* Tabs */}
-            <div className="flex gap-2 mb-6 bg-slate-100 p-1 rounded-lg w-full print:hidden">
-                <button 
-                    onClick={() => setModalMode('SIMPLE_QR')}
-                    className={`flex-1 py-2 rounded-md text-sm font-medium transition-colors flex justify-center gap-2 ${modalMode === 'SIMPLE_QR' ? 'bg-white text-orange-600 shadow' : 'text-slate-500 hover:text-slate-700'}`}
-                >
-                    <QrCode size={16} /> Ver QR
-                </button>
-                <button 
-                    onClick={() => setModalMode('DESIGNER')}
-                    className={`flex-1 py-2 rounded-md text-sm font-medium transition-colors flex justify-center gap-2 ${modalMode === 'DESIGNER' ? 'bg-white text-orange-600 shadow' : 'text-slate-500 hover:text-slate-700'}`}
-                >
-                    <ImageIcon size={16} /> Diseñador
-                </button>
-            </div>
+            {(() => {
+              const designerDisabled = selectedCredential.status !== 'ACTIVE' || isExpired(selectedCredential.expirationDate);
+              return (
+                <div className="flex gap-2 mb-6 bg-slate-100 p-1 rounded-lg w-full print:hidden">
+                    <button 
+                        onClick={() => setModalMode('SIMPLE_QR')}
+                        className={`flex-1 py-2 rounded-md text-sm font-medium transition-colors flex justify-center gap-2 ${modalMode === 'SIMPLE_QR' ? 'bg-white text-orange-600 shadow' : 'text-slate-500 hover:text-slate-700'}`}
+                    >
+                        <QrCode size={16} /> Ver QR
+                    </button>
+                    <button 
+                        onClick={() => {
+                          if (designerDisabled) return;
+                          setModalMode('DESIGNER');
+                        }}
+                        className={`flex-1 py-2 rounded-md text-sm font-medium transition-colors flex justify-center gap-2 ${
+                          designerDisabled
+                            ? 'text-slate-400 cursor-not-allowed'
+                            : modalMode === 'DESIGNER'
+                              ? 'bg-white text-orange-600 shadow'
+                              : 'text-slate-500 hover:text-slate-700'
+                        }`}
+                        disabled={designerDisabled}
+                        title={designerDisabled ? 'Disponible solo con credencial vigente' : 'Abrir Diseñador'}
+                    >
+                        <ImageIcon size={16} /> Diseñador
+                    </button>
+                </div>
+              );
+            })()}
 
             {/* CONTENT MODE: SIMPLE QR */}
             {modalMode === 'SIMPLE_QR' && (
@@ -332,7 +348,7 @@ export const AdminDashboard: React.FC = () => {
             )}
 
             {/* CONTENT MODE: DESIGNER */}
-            {modalMode === 'DESIGNER' && (
+            {modalMode === 'DESIGNER' && selectedCredential.status === 'ACTIVE' && !isExpired(selectedCredential.expirationDate) && (
                 <CredentialCanvas 
                     member={selectedMember} 
                     credential={selectedCredential}

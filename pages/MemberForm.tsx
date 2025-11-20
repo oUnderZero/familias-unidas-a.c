@@ -19,6 +19,8 @@ export const MemberForm: React.FC = () => {
   const [formData, setFormData] = useState<Partial<Member>>({
     status: 'ACTIVE',
     photoUrl: '',
+    curp: '',
+    postalCode: '',
     joinDate: new Date().toISOString().split('T')[0],
     credentials: []
   });
@@ -283,12 +285,30 @@ export const MemberForm: React.FC = () => {
                 </div>
             </div>
 
-             {/* Address Info */}
-             <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+            {/* Address Info */}
+            <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
                 <h3 className="font-bold text-slate-800 mb-4 pb-2 border-b border-slate-100 flex items-center gap-2">
                     <MapPin size={18} className="text-orange-500" /> Domicilio
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="md:col-span-1">
+                        <label className="block text-sm font-medium text-slate-700 mb-1">Ciudad</label>
+                        <input 
+                            placeholder="Ej. Guadalajara"
+                            className={inputClass}
+                            value={formData.city || ''}
+                            onChange={(e) => handleChange('city', e.target.value)}
+                        />
+                    </div>
+                    <div className="md:col-span-1">
+                        <label className="block text-sm font-medium text-slate-700 mb-1">Código Postal</label>
+                        <input 
+                            placeholder="Ej. 58000"
+                            className={inputClass}
+                            value={formData.postalCode || ''}
+                            onChange={(e) => handleChange('postalCode', e.target.value)}
+                        />
+                    </div>
                     <div className="md:col-span-1">
                         <label className="block text-sm font-medium text-slate-700 mb-1">Calle</label>
                         <input 
@@ -316,15 +336,6 @@ export const MemberForm: React.FC = () => {
                             onChange={(e) => handleChange('colony', e.target.value)}
                         />
                     </div>
-                    <div className="md:col-span-1">
-                        <label className="block text-sm font-medium text-slate-700 mb-1">Ciudad</label>
-                        <input 
-                            placeholder="Ej. Guadalajara"
-                            className={inputClass}
-                            value={formData.city || ''}
-                            onChange={(e) => handleChange('city', e.target.value)}
-                        />
-                    </div>
                 </div>
             </div>
 
@@ -333,7 +344,7 @@ export const MemberForm: React.FC = () => {
                 <h3 className="font-bold text-slate-800 mb-4 pb-2 border-b border-slate-100 flex items-center gap-2">
                     <Briefcase size={18} className="text-orange-500" /> Datos Organización
                 </h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div>
                         <label className="block text-sm font-medium text-slate-700 mb-1">Rol</label>
                         <input 
@@ -356,6 +367,15 @@ export const MemberForm: React.FC = () => {
                             <option value="A+">A+</option>
                             <option value="A-">A-</option>
                         </select>
+                    </div>
+                     <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">CURP</label>
+                        <input 
+                            className={inputClass}
+                            value={formData.curp || ''}
+                            onChange={(e) => handleChange('curp', e.target.value.toUpperCase())}
+                            placeholder="16-18 caracteres"
+                        />
                     </div>
                      <div>
                         <label className="block text-sm font-medium text-slate-700 mb-1">Tel. Emergencia</label>
