@@ -53,7 +53,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
             </div>
             {error && (
               <p className="text-red-500 text-xs mt-2 font-medium flex items-center gap-1">
-                 Contraseña incorrecta. Intente 'admin123'.
+                 Contraseña incorrecta..
               </p>
             )}
           </div>
