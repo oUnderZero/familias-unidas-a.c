@@ -1,6 +1,13 @@
-import { Member, Credential } from '../types';
+import { Member, Credential } from '../types'; 
 
-const API_BASE = (import.meta as any)?.env?.VITE_API_URL || 'http://localhost:4000/api';
+// Resolve API base prioritizing build-time Vite env, then global/window, then localhost
+const resolveApiBase = () => {
+  const metaEnv = (typeof import.meta !== 'undefined' && (import.meta as any).env) || {};
+  const envUrl = metaEnv.VITE_API_URL || (typeof window !== 'undefined' && (window as any).VITE_API_URL);
+  return envUrl || 'http://localhost:4000/api';
+};
+
+const API_BASE = resolveApiBase();
 const API_ORIGIN = API_BASE.replace(/\/api\/?$/, '');
 
 const request = async <T>(path: string, options?: RequestInit): Promise<T> => {
