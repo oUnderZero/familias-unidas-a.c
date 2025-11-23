@@ -30,6 +30,7 @@ app.use('/uploads', express.static(UPLOAD_DIR));
 
 const pool = new Pool({
   connectionString: DATABASE_URL,
+  ssl: { rejectUnauthorized: false }
 });
 
 const query = async (text, params) => {
