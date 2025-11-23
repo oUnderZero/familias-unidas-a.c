@@ -229,7 +229,7 @@ const seedIfEmpty = () => {
         photoUrl: 'https://picsum.photos/200/200?random=5',
         status: 'ACTIVE',
         emergencyContact: '443-000-0003',
-        street: 'Rafael Maria Villagran',
+        street: 'Jose del Rio',
         houseNumber: '208',
         colony: 'Jose Maria Morelos',
         city: 'Morelia, Michoacán',
