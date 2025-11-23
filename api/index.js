@@ -80,29 +80,7 @@ const ensureUploadDir = () => {
 };
 
 // 👉 POSTGRES CHANGE: Cambiar la lógica de chequeo de columna. Se usa INFORMATION_SCHEMA.
-const ensureCurpColumn = async () => {
-  try {
-    const table = 'members';
-    const cols = await query(`
-            SELECT column_name
-            FROM information_schema.columns
-            WHERE table_name = $1
-            AND table_schema = current_schema()
-        `, [table]);
-
-    const hasCurp = cols.rows.some((c) => c.column_name === 'curp');
-    const hasPostalCode = cols.rows.some((c) => c.column_name === 'postalCode');
-
-    if (!hasCurp) {
-      await query(`ALTER TABLE ${table} ADD COLUMN curp TEXT`);
-    }
-    if (!hasPostalCode) {
-      await query(`ALTER TABLE ${table} ADD COLUMN postalCode TEXT`);
-    }
-  } catch (err) {
-    console.error('No se pudo asegurar las columnas curp/postalCode:', err);
-  }
-};
+ 
 
 const authGuard = (req, res, next) => {
   if (req.path.startsWith('/public') || req.path === '/health' || req.path === '/login') {
@@ -275,8 +253,7 @@ const findMemberWithCreds = async (id) => {
 // 🏃 Iniciar la base de datos de forma asíncrona
 (async () => {
   try {
-    await initDb();
-    await ensureCurpColumn();
+    await initDb(); 
     ensureUploadDir();
     await seedIfEmpty(); // La siembra debe esperar la conexión
     app.use('/api', authGuard);
