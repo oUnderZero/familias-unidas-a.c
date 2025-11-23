@@ -164,62 +164,186 @@ const seedIfEmpty = () => {
     `);
 
     const demoMembers = [
+      // --- MIEMBROS ANTERIORES ---
       {
         id: generateId(),
-        firstName: 'Roberto',
-        lastName: 'Gomez',
-        role: 'Presidente',
-        joinDate: '2020-01-15',
-      bloodType: 'O+',
-      curp: 'GOZR800101HDFRBN01',
-      postalCode: '58000',
-      photoUrl: 'https://picsum.photos/200/200?random=1',
-      status: 'ACTIVE',
-      emergencyContact: '555-123-4567',
-        street: 'Av. Principal',
-        houseNumber: '123',
-        colony: 'Centro',
-        city: 'Ciudad de Mexico',
+        firstName: 'Candelario',
+        lastName: 'Aparicio Aguilar',
+        role: 'Vocal',
+        joinDate: '2025-23-11',
+        bloodType: '',
+        curp: 'AAAC620202HMNPGN09',
+        postalCode: '58116',
+        photoUrl: 'https://picsum.photos/200/200?random=3',
+        status: 'ACTIVE',
+        emergencyContact: '443-000-0001',
+        street: 'Priv. de Pejo',
+        houseNumber: 'Mnz 58 Lt 9',
+        colony: 'Presa de los Reyes',
+        city: 'Morelia, Michoacán',
         credentials: [
           {
             id: generateId(),
             token: generateToken(),
-            issueDate: '2024-01-01',
-            expirationDate: '2025-12-31',
+            issueDate: '2024-11-08',
+            expirationDate: '2030-11-08',
             status: 'ACTIVE'
-          },
-          {
-            id: generateId(),
-            token: generateToken(),
-            issueDate: '2022-01-01',
-            expirationDate: '2023-12-31',
-            status: 'EXPIRED'
           }
         ]
       },
       {
         id: generateId(),
-        firstName: 'Maria',
-        lastName: 'Fernandez',
-        role: 'Tesorera',
-        joinDate: '2021-03-10',
-      bloodType: 'A+',
-      curp: 'FEGM900202MDFLRS02',
-      postalCode: '58099',
-      photoUrl: 'https://picsum.photos/200/200?random=2',
-      status: 'ACTIVE',
-        emergencyContact: '555-987-6543',
-        street: 'Calle de las Flores',
-        houseNumber: '45 Int 2',
-        colony: 'Jardines del Sur',
-        city: 'Monterrey',
+        firstName: 'Ramiro',
+        lastName: 'Ibarra Garcia',
+        role: 'Vocal',
+        joinDate: '2025-23-11',
+        bloodType: '',
+        curp: 'IAGR770611HMNBRM05',
+        postalCode: '58115',
+        photoUrl: 'https://picsum.photos/200/200?random=4',
+        status: 'ACTIVE',
+        emergencyContact: '443-000-0002',
+        street: 'Valle de Bravo',
+        houseNumber: 'Mz 39 L19',
+        colony: 'Valle de los Reyes',
+        city: 'Morelia, Michoacán',
         credentials: [
           {
             id: generateId(),
             token: generateToken(),
-            issueDate: '2023-01-01',
-            expirationDate: '2024-01-01',
-            status: 'EXPIRED'
+            issueDate: '2024-11-08',
+            expirationDate: '2030-11-08',
+            status: 'ACTIVE'
+          }
+        ]
+      },
+      {
+        id: generateId(),
+        firstName: 'Canuto',
+        lastName: 'Valdovinos Saucedo',
+        role: 'Vicepresidente',
+        joinDate: '2025-23-11',
+        bloodType: 'O+',
+        curp: 'VASC510119HGRLCN15',
+        postalCode: '58148',
+        photoUrl: 'https://picsum.photos/200/200?random=5',
+        status: 'ACTIVE',
+        emergencyContact: '443-000-0003',
+        street: 'Rafael Maria Villagran',
+        houseNumber: '208',
+        colony: 'Jose Maria Morelos',
+        city: 'Morelia, Michoacán',
+        credentials: [
+          {
+            id: generateId(),
+            token: generateToken(),
+            issueDate: '2024-11-08',
+            expirationDate: '2030-11-08',
+            status: 'ACTIVE'
+          }
+        ]
+      },
+      {
+        id: generateId(),
+        firstName: 'Jose Luis',
+        lastName: 'Roman Torres',
+        role: 'Presidente',
+        joinDate: '2025-23-11',
+        bloodType: 'O+',
+        curp: 'ROTL680923HMNMRS13',
+        postalCode: '58148',
+        photoUrl: 'https://picsum.photos/200/200?random=6',
+        status: 'ACTIVE',
+        emergencyContact: '443-476-7856',
+        street: 'Mariano Torres Aranda',
+        houseNumber: '114',
+        colony: 'Jose Maria Morelos',
+        city: 'Morelia, Michoacán',
+        credentials: [
+          {
+            id: generateId(),
+            token: generateToken(),
+            issueDate: '2024-11-08',
+            expirationDate: '2030-11-08',
+            status: 'ACTIVE'
+          }
+        ]
+      },
+      {
+        id: generateId(),
+        firstName: 'Cornelio',
+        lastName: 'Garcia Sanchez',
+        role: 'Vocal',
+        joinDate: '2021-02-20',
+        bloodType: 'O+',
+        curp: 'GASC530915HMNRNR01',
+        postalCode: '58116',
+        photoUrl: 'https://picsum.photos/200/200?random=7',
+        status: 'ACTIVE',
+        emergencyContact: '443-000-0005',
+        street: 'Valle de Bravo',
+        houseNumber: 'Mz 39 Lt 19',
+        colony: 'Presa de los Reyes',
+        city: 'Morelia, Michoacán',
+        credentials: [
+          {
+            id: generateId(),
+            token: generateToken(),
+            issueDate: '2023-11-08',
+            expirationDate: '2025-11-08',
+            status: 'ACTIVE'
+          }
+        ]
+      },
+      {
+        id: generateId(),
+        firstName: 'Luis Angel',
+        lastName: 'Roman Valdovinos',
+        role: 'Vocal',
+        joinDate: '2024-01-15',
+        bloodType: '',
+        curp: 'ROVL960121HMNMLS01',
+        postalCode: '58148',
+        photoUrl: 'https://picsum.photos/200/200?random=8',
+        status: 'ACTIVE',
+        emergencyContact: '443-000-0006',
+        street: 'Mariano Torres Aranda',
+        houseNumber: '114',
+        colony: 'Jose Maria Morelos',
+        city: 'Morelia, Michoacán',
+        credentials: [
+          {
+            id: generateId(),
+            token: generateToken(),
+            issueDate: '2024-11-08',
+            expirationDate: '2030-11-08',
+            status: 'ACTIVE'
+          }
+        ]
+      }, 
+      {
+        id: generateId(),
+        firstName: 'Nelida',
+        lastName: 'Valdovinos Campos',
+        role: 'Vocal', 
+        joinDate: '2024-01-15',
+        bloodType: 'O+',  
+        curp: 'VACN810404MMNLML08',  
+        postalCode: '58148',  
+        photoUrl: 'https://picsum.photos/200/200?random=9',
+        status: 'ACTIVE',
+        emergencyContact: '443-000-0007',
+        street: 'Jose del Rio',  
+        houseNumber: '208', 
+        colony: 'Jose Maria Morelos',  
+        city: 'Morelia, Michoacán',  
+        credentials: [
+          {
+            id: generateId(),
+            token: generateToken(),
+            issueDate: '2024-11-08',  
+            expirationDate: '2030-11-08',  
+            status: 'ACTIVE'
           }
         ]
       }
