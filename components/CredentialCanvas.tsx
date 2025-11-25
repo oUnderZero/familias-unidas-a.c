@@ -61,10 +61,10 @@ export const CredentialCanvas: React.FC<CredentialCanvasProps> = ({
           try {
             const photo = await loadImage(resolveMediaUrl(member.photoUrl));
             // Coordenadas cuadrícula del recuadro de foto en la plantilla frontal
-            const photoX = 36;
-            const photoY = 276;
-            const photoW = 156;
-            const photoH = 156;
+            const photoX = 15;
+            const photoY = 240;
+            const photoW = 200;
+            const photoH = 220;
 
             // Optional: Draw a white background behind photo
             ctx.fillStyle = "#fff";
@@ -80,22 +80,14 @@ export const CredentialCanvas: React.FC<CredentialCanvasProps> = ({
             let drawHeight; // Alto de la parte de la imagen original a dibujar (sy, sh)
             let offsetX = 0; // Posición x de inicio en la imagen original (sx)
             let offsetY = 0; // Posición y de inicio en la imagen original (sy)
-
-            if (imgRatio > boxRatio) {
+ 
               // La imagen es más ancha que el recuadro de destino.
               // Ajustamos por altura y centramos horizontalmente, recortando los lados.
               drawHeight = photo.height;
               drawWidth = photo.height * boxRatio;
               offsetX = (photo.width - drawWidth) / 2;
               offsetY = 0;
-            } else {
-              // La imagen es más alta que el recuadro de destino (o es la misma proporción).
-              // Ajustamos por ancho y centramos verticalmente, recortando arriba/abajo.
-              drawWidth = photo.width;
-              drawHeight = photo.width / boxRatio;
-              offsetX = 0;
-              offsetY = (photo.height - drawHeight) / 2;
-            }
+            
 
             // Dibujar usando los 9 argumentos de drawImage:
             // ctx.drawImage(imagen, sx, sy, sw, sh, dx, dy, dw, dh)
